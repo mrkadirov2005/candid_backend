@@ -10,16 +10,7 @@ export const envConfigSchema = z.object({
   DATABASE_USER: z.string().min(1),
   DATABASE_PASSWORD: z.string().min(1),
 
-  MAIL_SMTP_HOST: z.string().min(1),
-  MAIL_SMTP_PORT: z.coerce.number().int().min(1).max(65535),
-  MAIL_WEB_PORT: z.coerce.number().int().min(1).max(65535),
-
   FRONTEND_BASE_URL: z.url(),
-
-  AUTH_JWT_ACCESS_SECRET: z.string().min(1),
-  AUTH_JWT_REFRESH_SECRET: z.string().min(1),
-  AUTH_JWT_ACCESS_TOKEN_EXPIRES_IN: z.string().min(1),
-  AUTH_JWT_REFRESH_TOKEN_EXPIRES_IN: z.string().min(1),
 });
 
 export type EnvConfig = z.infer<typeof envConfigSchema>;
