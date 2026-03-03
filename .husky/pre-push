@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+echo "🔧 running tests pre-push hook..."
+npm test || {
+    echo "❌ tests failed: push aborted."
+    exit 1
+}
+echo "✅ tests passed: proceeding with push."
