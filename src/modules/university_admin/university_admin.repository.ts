@@ -1,16 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
+import type {
+  CreateUniversityAdminInput,
+  UpdateUniversityAdminInput,
+} from '#/shared/types/repository/university_admin.repository.types';
 import { DatabaseService } from '../database/database.service';
 import { universityAdmin } from '../database/schema';
-
-export type CreateUniversityAdminInput = {
-  userId: string;
-  universityId: string;
-};
-
-export type UpdateUniversityAdminInput = {
-  universityId?: string;
-};
 
 @Injectable()
 export class UniversityAdminRepository {
@@ -25,7 +20,7 @@ export class UniversityAdminRepository {
       })
       .returning();
 
-    return row ?? null;
+    return row;
   }
 
   async findById(adminId: string) {
@@ -35,10 +30,9 @@ export class UniversityAdminRepository {
       .where(eq(universityAdmin.adminId, adminId))
       .limit(1);
 
-    return row ?? null;
+    return row;
   }
 
-  // pagination-ready signature
   async list(params?: { limit?: number; offset?: number }) {
     const limit = params?.limit ?? 20;
     const offset = params?.offset ?? 0;
@@ -58,6 +52,6 @@ export class UniversityAdminRepository {
       .where(eq(universityAdmin.adminId, adminId))
       .returning();
 
-    return row ?? null;
+    return row;
   }
 }

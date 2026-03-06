@@ -1,5 +1,5 @@
 import type { DatabaseService } from '../database/database.service';
-import { UniversityAdminRepository } from './university-admin.repository';
+import { UniversityAdminRepository } from './university_admin.repository';
 
 describe('UniversityAdminRepository', () => {
   const makeDbMock = () => {
@@ -53,7 +53,6 @@ describe('UniversityAdminRepository', () => {
   };
 
   const makeRepo = (dbMock: ReturnType<typeof makeDbMock>) => {
-    // Keep mock minimal; cast via unknown to satisfy TS without using `any`.
     const databaseServiceMock = {
       db: {
         insert: dbMock.insert,
@@ -87,7 +86,7 @@ describe('UniversityAdminRepository', () => {
     expect(res).toEqual(inserted);
   });
 
-  it('create: returns null if returning is empty', async () => {
+  it('create: returns undefined if returning is empty', async () => {
     const dbMock = makeDbMock();
     const repo = makeRepo(dbMock);
 
@@ -98,7 +97,7 @@ describe('UniversityAdminRepository', () => {
       universityId: '33333333-3333-3333-3333-333333333333',
     });
 
-    expect(res).toBeNull();
+    expect(res).toBeUndefined();
   });
 
   it('findById: returns row when found', async () => {
@@ -120,7 +119,7 @@ describe('UniversityAdminRepository', () => {
     expect(res).toEqual(row);
   });
 
-  it('findById: returns null when not found', async () => {
+  it('findById: returns undefined when not found', async () => {
     const dbMock = makeDbMock();
     const repo = makeRepo(dbMock);
 
@@ -128,7 +127,7 @@ describe('UniversityAdminRepository', () => {
 
     const res = await repo.findById('11111111-1111-1111-1111-111111111111');
 
-    expect(res).toBeNull();
+    expect(res).toBeUndefined();
   });
 
   it('list: returns rows', async () => {
@@ -173,7 +172,7 @@ describe('UniversityAdminRepository', () => {
     expect(res).toEqual(updated);
   });
 
-  it('update: returns null when not found', async () => {
+  it('update: returns undefined when not found', async () => {
     const dbMock = makeDbMock();
     const repo = makeRepo(dbMock);
 
@@ -183,6 +182,6 @@ describe('UniversityAdminRepository', () => {
       universityId: '33333333-3333-3333-3333-333333333333',
     });
 
-    expect(res).toBeNull();
+    expect(res).toBeUndefined();
   });
 });

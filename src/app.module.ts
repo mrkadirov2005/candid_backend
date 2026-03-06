@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from '#/shared/configs';
 import { DatabaseModule } from './modules/database/database.module';
 import { HealthModule } from './modules/health/health.module';
-import { UniversityAdminModule } from './modules/university-admin';
+import { UniversityAdminModule } from './modules/university_admin';
 
 @Module({
   imports: [
