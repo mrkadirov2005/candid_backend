@@ -1,0 +1,1 @@
+export * as REPOSITORY_TYPE from "./index";
