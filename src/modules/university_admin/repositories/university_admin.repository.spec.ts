@@ -1,5 +1,5 @@
-import type { DatabaseService } from '../database/database.service';
-import { UniversityAdminRepository } from './university-admin.repository';
+import type { DatabaseService } from '../../database/database.service';
+import { UniversityAdminRepository } from './university_admin.repository';
 
 describe('UniversityAdminRepository', () => {
   const makeDbMock = () => {

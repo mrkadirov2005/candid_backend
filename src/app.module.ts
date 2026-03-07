@@ -3,7 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from '#/shared/configs';
 import { DatabaseModule } from './modules/database/database.module';
 import { HealthModule } from './modules/health/health.module';
-import { UniversityAdminModule } from './modules/university-admin';
+import { StudentModule } from './modules/student';
+import { UniversityAdminModule } from './modules/university_admin';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UniversityAdminModule } from './modules/university-admin';
     DatabaseModule,
     HealthModule,
     UniversityAdminModule,
+    StudentModule,
   ],
 })
 export class AppModule {}

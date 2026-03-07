@@ -1,22 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import { DatabaseService } from '../database/database.service';
-import { universityAdmin } from '../database/schema';
+import { DatabaseService } from '../../database/database.service';
+import { universityAdmin } from '../../database/schema';
+import {REPOSITORY_TYPE} from '#/shared/types/repository/_';
 
-export type CreateUniversityAdminInput = {
-  userId: string;
-  universityId: string;
-};
-
-export type UpdateUniversityAdminInput = {
-  universityId?: string;
-};
 
 @Injectable()
 export class UniversityAdminRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async create(input: CreateUniversityAdminInput) {
+  async create(input: REPOSITORY_TYPE.CreateUniversityAdminInput) {
     const [row] = await this.databaseService.db
       .insert(universityAdmin)
       .values({
@@ -25,7 +18,7 @@ export class UniversityAdminRepository {
       })
       .returning();
 
-    return row ?? null;
+    return row??null;
   }
 
   async findById(adminId: string) {
@@ -35,10 +28,10 @@ export class UniversityAdminRepository {
       .where(eq(universityAdmin.adminId, adminId))
       .limit(1);
 
-    return row ?? null;
+    return row;
   }
 
-  // pagination-ready signature
+  // pagination-ready signature`
   async list(params?: { limit?: number; offset?: number }) {
     const limit = params?.limit ?? 20;
     const offset = params?.offset ?? 0;
@@ -48,7 +41,7 @@ export class UniversityAdminRepository {
     return rows;
   }
 
-  async update(adminId: string, input: UpdateUniversityAdminInput) {
+  async update(adminId: string, input: REPOSITORY_TYPE.UpdateUniversityAdminInput) {
     const [row] = await this.databaseService.db
       .update(universityAdmin)
       .set({
@@ -58,6 +51,6 @@ export class UniversityAdminRepository {
       .where(eq(universityAdmin.adminId, adminId))
       .returning();
 
-    return row ?? null;
+    return row;
   }
 }
