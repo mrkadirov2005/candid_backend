@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "teachers" (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT fk_teachers_user
     FOREIGN KEY (user_id)
-    REFERENCES "users"(id)
+    REFERENCES "users"(user_id)
     ON UPDATE CASCADE
     ON DELETE CASCADE,
   CONSTRAINT fk_teachers_university

@@ -1,11 +1,7 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { sql } from 'drizzle-orm';
+import type { Request } from 'express';
 import { DatabaseService } from '#/modules/database/database.service';
 import { ROLES_KEY, type RolesMetadata } from '../decorators/roles.decorator';
 
@@ -19,16 +15,13 @@ export class RolesGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const rolesMetadata = this.reflector.getAllAndOverride<RolesMetadata>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const rolesMetadata = this.reflector.getAllAndOverride<RolesMetadata>(ROLES_KEY, [context.getHandler(), context.getClass()]);
 
     if (!rolesMetadata) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request & { user: { role: string; userId: string } }>();
     const user = request.user;
 
     if (!user || !user.role) {

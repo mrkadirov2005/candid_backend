@@ -8,54 +8,103 @@ import {
 } from './teacher.repository';
 
 describe('TeacherRepository', () => {
-  let dbExecuteMock: jest.Mock;
-  let databaseServiceMock: jest.Mocked<DatabaseService>;
-  let repository: TeacherRepository;
+  const makeDbMock = () => {
+    type ExecReturn = Promise<unknown>;
 
-  beforeEach(() => {
-    dbExecuteMock = jest.fn();
+    // INSERT chain
+    const insertReturning: jest.Mock<Promise<unknown[]>, []> = jest.fn();
+    const insertValues = jest.fn(() => ({ returning: insertReturning }));
+    const insert = jest.fn(() => ({ values: insertValues }));
 
-    databaseServiceMock = {
+    // SELECT chain
+    const selectExec: jest.Mock<ExecReturn, []> = jest.fn();
+    const selectOffset = jest.fn((): ExecReturn => selectExec());
+    const selectLimit = jest.fn(() => ({ offset: selectOffset }));
+    const selectOrderBy = jest.fn(() => ({ limit: selectLimit }));
+    const selectWhere = jest.fn(() => ({
+      limit: jest.fn((): ExecReturn => selectExec()),
+    }));
+    const selectFrom = jest.fn(() => ({
+      where: selectWhere,
+      orderBy: selectOrderBy,
+    }));
+    const select = jest.fn(() => ({ from: selectFrom }));
+
+    // UPDATE chain
+    const updateReturning: jest.Mock<Promise<unknown[]>, []> = jest.fn();
+    const updateWhere = jest.fn(() => ({ returning: updateReturning }));
+    const updateSet = jest.fn(() => ({ where: updateWhere }));
+    const update = jest.fn(() => ({ set: updateSet }));
+
+    return {
+      insert,
+      insertValues,
+      insertReturning,
+      select,
+      selectFrom,
+      selectWhere,
+      selectOrderBy,
+      selectLimit,
+      selectOffset,
+      selectExec,
+      update,
+      updateSet,
+      updateWhere,
+      updateReturning,
+    };
+  };
+
+  const makeRepo = (dbMock: ReturnType<typeof makeDbMock>) => {
+    const databaseServiceMock = {
       db: {
-        execute: dbExecuteMock,
+        insert: dbMock.insert,
+        select: dbMock.select,
+        update: dbMock.update,
       },
-    } as unknown as jest.Mocked<DatabaseService>;
-
-    repository = new TeacherRepository(databaseServiceMock);
-  });
+    };
+    return new TeacherRepository(databaseServiceMock as unknown as DatabaseService);
+  };
 
   it('creates a teacher', async () => {
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
     const input: CreateTeacherInput = {
       userId: 'user-1',
       universityId: 'uni-1',
       specialty: 'Math',
+      password: 'hashed-pass',
     };
 
     const row: Teacher = {
-      teacher_id: 'teacher-1',
-      user_id: input.userId,
-      university_id: input.universityId,
-      is_verified: false,
+      teacherId: 'teacher-1',
+      userId: input.userId,
+      universityId: input.universityId,
+      isVerified: false,
       specialty: input.specialty ?? null,
-      created_at: new Date(),
-      updated_at: new Date(),
+      password: input.password,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    dbExecuteMock.mockResolvedValue({ rows: [row] });
+    dbMock.insertReturning.mockResolvedValueOnce([row]);
 
     const result = await repository.create(input);
 
-    expect(dbExecuteMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual(row);
   });
 
   it('returns undefined when create did not insert a row', async () => {
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
     const input: CreateTeacherInput = {
       userId: 'user-1',
       universityId: 'uni-1',
+      password: 'hashed-pass',
     };
 
-    dbExecuteMock.mockResolvedValue({ rows: [] });
+    dbMock.insertReturning.mockResolvedValueOnce([]);
 
     const result = await repository.create(input);
 
@@ -63,28 +112,34 @@ describe('TeacherRepository', () => {
   });
 
   it('finds a teacher by id when it exists', async () => {
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
     const teacherId = 'teacher-1';
 
     const row: Teacher = {
-      teacher_id: teacherId,
-      user_id: 'user-1',
-      university_id: 'uni-1',
-      is_verified: true,
+      teacherId,
+      userId: 'user-1',
+      universityId: 'uni-1',
+      isVerified: true,
       specialty: 'Physics',
-      created_at: new Date(),
-      updated_at: new Date(),
+      password: 'hashed-pass',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    dbExecuteMock.mockResolvedValue({ rows: [row] });
+    dbMock.selectExec.mockResolvedValueOnce([row]);
 
     const result = await repository.findById(teacherId);
 
-    expect(dbExecuteMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual(row);
   });
 
   it('returns undefined when teacher is not found by id', async () => {
-    dbExecuteMock.mockResolvedValue({ rows: [] });
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
+    dbMock.selectExec.mockResolvedValueOnce([]);
 
     const result = await repository.findById('missing-id');
 
@@ -92,46 +147,55 @@ describe('TeacherRepository', () => {
   });
 
   it('lists teachers with default pagination', async () => {
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
     const rows: Teacher[] = [
       {
-        teacher_id: 't1',
-        user_id: 'u1',
-        university_id: 'uni1',
-        is_verified: false,
+        teacherId: 't1',
+        userId: 'u1',
+        universityId: 'uni1',
+        isVerified: false,
         specialty: null,
-        created_at: new Date(),
-        updated_at: new Date(),
+        password: 'p1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
       {
-        teacher_id: 't2',
-        user_id: 'u2',
-        university_id: 'uni2',
-        is_verified: true,
+        teacherId: 't2',
+        userId: 'u2',
+        universityId: 'uni2',
+        isVerified: true,
         specialty: 'Math',
-        created_at: new Date(),
-        updated_at: new Date(),
+        password: 'p2',
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
     ];
 
-    dbExecuteMock.mockResolvedValue({ rows });
+    dbMock.selectExec.mockResolvedValueOnce(rows);
 
     const params: ListTeachersParams = {};
     const result = await repository.list(params);
 
-    expect(dbExecuteMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual(rows);
   });
 
   it('lists teachers with custom pagination', async () => {
-    dbExecuteMock.mockResolvedValue({ rows: [] });
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
+    dbMock.selectExec.mockResolvedValueOnce([]);
 
     const params: ListTeachersParams = { limit: 10, offset: 5 };
-    await repository.list(params);
-
-    expect(dbExecuteMock).toHaveBeenCalledTimes(1);
+    const result = await repository.list(params);
+    expect(result).toEqual([]);
   });
 
   it('updates a teacher and returns updated entity when both fields provided', async () => {
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
     const teacherId = 'teacher-1';
     const input: UpdateTeacherInput = {
       isVerified: true,
@@ -139,30 +203,33 @@ describe('TeacherRepository', () => {
     };
 
     const row: Teacher = {
-      teacher_id: teacherId,
-      user_id: 'user-1',
-      university_id: 'uni-1',
-      is_verified: true,
+      teacherId,
+      userId: 'user-1',
+      universityId: 'uni-1',
+      isVerified: true,
       specialty: 'Computer Science',
-      created_at: new Date(),
-      updated_at: new Date(),
+      password: 'hashed-pass',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    dbExecuteMock.mockResolvedValue({ rows: [row] });
+    dbMock.updateReturning.mockResolvedValueOnce([row]);
 
     const result = await repository.update(teacherId, input);
 
-    expect(dbExecuteMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual(row);
   });
 
   it('returns undefined when updating non-existing teacher', async () => {
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
     const teacherId = 'missing-id';
     const input: UpdateTeacherInput = {
       isVerified: true,
     };
 
-    dbExecuteMock.mockResolvedValue({ rows: [] });
+    dbMock.updateReturning.mockResolvedValueOnce([]);
 
     const result = await repository.update(teacherId, input);
 
@@ -170,23 +237,26 @@ describe('TeacherRepository', () => {
   });
 
   it('falls back to findById when no update fields are provided', async () => {
+    const dbMock = makeDbMock();
+    const repository = makeRepo(dbMock);
+
     const teacherId = 'teacher-1';
 
     const row: Teacher = {
-      teacher_id: teacherId,
-      user_id: 'user-1',
-      university_id: 'uni-1',
-      is_verified: false,
+      teacherId,
+      userId: 'user-1',
+      universityId: 'uni-1',
+      isVerified: false,
       specialty: null,
-      created_at: new Date(),
-      updated_at: new Date(),
+      password: 'hashed-pass',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
 
-    dbExecuteMock.mockResolvedValueOnce({ rows: [row] });
+    dbMock.selectExec.mockResolvedValueOnce([row]);
 
     const result = await repository.update(teacherId, {});
 
-    expect(dbExecuteMock).toHaveBeenCalledTimes(1);
     expect(result).toEqual(row);
   });
 });

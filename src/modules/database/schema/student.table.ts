@@ -10,6 +10,7 @@ export const student = pgTable(
     firstName: varchar('first_name', { length: 50 }).notNull(),
     lastName: varchar('last_name', { length: 50 }).notNull(),
     email: text('email'),
+    password: text('password').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

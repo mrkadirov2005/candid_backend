@@ -1,4 +1,4 @@
-export type STUDENT_TYPE = {
+export type StudentType = {
   userId: string;
   universityId: string;
 };
@@ -9,7 +9,8 @@ export type CreateStudentInput = {
   adminId?: string | null;
   firstName: string;
   lastName: string;
-  email?: string | null;
+  email: string;
+  password: string;
 };
 
 export type UpdateStudentInput = {

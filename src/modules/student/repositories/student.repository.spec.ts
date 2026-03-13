@@ -73,6 +73,7 @@ describe('StudentRepository', () => {
     firstName: 'John',
     lastName: 'Doe',
     email: 'john@example.com',
+    password: 'hashed-pass',
     createdAt: new Date('2026-01-01'),
     updatedAt: new Date('2026-01-01'),
   };
@@ -88,6 +89,7 @@ describe('StudentRepository', () => {
       firstName: 'John',
       lastName: 'Doe',
       email: 'john@example.com',
+      password: 'hashed-pass',
     });
 
     expect(result).toEqual(sampleRow);
@@ -103,6 +105,7 @@ describe('StudentRepository', () => {
       universityId: sampleRow.universityId,
       firstName: 'John',
       lastName: 'Doe',
+      password: 'hashed-pass',
     });
 
     expect(result).toBeUndefined();

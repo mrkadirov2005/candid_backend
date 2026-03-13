@@ -1,21 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { sql } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { DatabaseService } from '../database/database.service';
+import { teacher } from '../database/schema';
 
 export interface Teacher extends Record<string, unknown> {
-  teacher_id: string;
-  user_id: string;
-  university_id: string;
-  is_verified: boolean;
+  teacherId: string;
+  userId: string;
+  universityId: string;
+  isVerified: boolean;
   specialty: string | null;
-  created_at: Date;
-  updated_at: Date;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CreateTeacherInput {
   userId: string;
   universityId: string;
   specialty?: string | null;
+  password: string;
 }
 
 export interface ListTeachersParams {
@@ -32,43 +35,31 @@ export interface UpdateTeacherInput {
 export class TeacherRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async create(input: CreateTeacherInput): Promise<Teacher | undefined> {
+  async create(input: CreateTeacherInput, db = this.databaseService.db): Promise<Teacher | undefined> {
     const { userId, universityId, specialty = null } = input;
 
-    const result = await this.databaseService.db.execute<Teacher>(
-      sql`
-        INSERT INTO teachers (user_id, university_id, specialty)
-        VALUES (${userId}, ${universityId}, ${specialty})
-        RETURNING teacher_id,
-                  user_id,
-                  university_id,
-                  is_verified,
-                  specialty,
-                  created_at,
-                  updated_at
-      `,
-    );
+    const [row] = await db
+      .insert(teacher)
+      .values({
+        userId,
+        universityId,
+        specialty,
+        password: input.password,
+      })
+      .returning();
 
-    const row = result.rows[0];
     return row;
   }
 
   async findById(id: string): Promise<Teacher | undefined> {
-    const result = await this.databaseService.db.execute<Teacher>(
-      sql`
-        SELECT teacher_id,
-               user_id,
-               university_id,
-               is_verified,
-               specialty,
-               created_at,
-               updated_at
-        FROM teachers
-        WHERE teacher_id = ${id}
-      `,
-    );
+    const [row] = await this.databaseService.db.select().from(teacher).where(eq(teacher.teacherId, id)).limit(1);
 
-    const row = result.rows[0];
+    return row;
+  }
+
+  async findByUserId(userId: string): Promise<Teacher | undefined> {
+    const [row] = await this.databaseService.db.select().from(teacher).where(eq(teacher.userId, userId)).limit(1);
+
     return row;
   }
 
@@ -76,83 +67,35 @@ export class TeacherRepository {
     const limit = params.limit ?? 20;
     const offset = params.offset ?? 0;
 
-    const result = await this.databaseService.db.execute<Teacher>(
-      sql`
-        SELECT teacher_id,
-               user_id,
-               university_id,
-               is_verified,
-               specialty,
-               created_at,
-               updated_at
-        FROM teachers
-        ORDER BY created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `,
-    );
+    const rows = await this.databaseService.db
+      .select()
+      .from(teacher)
+      .orderBy(desc(teacher.createdAt))
+      .limit(limit)
+      .offset(offset);
 
-    return result.rows;
+    return rows;
   }
 
   async update(id: string, input: UpdateTeacherInput): Promise<Teacher | undefined> {
-    if (input.isVerified === undefined && input.specialty === undefined) {
+    const updates: UpdateTeacherInput & { updatedAt?: Date } = {};
+
+    if (input.isVerified !== undefined) {
+      updates.isVerified = input.isVerified;
+    }
+
+    if (input.specialty !== undefined) {
+      updates.specialty = input.specialty;
+    }
+
+    if (Object.keys(updates).length === 0) {
       return this.findById(id);
     }
 
-    let result: { rows: Teacher[] };
+    updates.updatedAt = new Date();
 
-    if (input.isVerified !== undefined && input.specialty !== undefined) {
-      result = await this.databaseService.db.execute<Teacher>(
-        sql`
-          UPDATE teachers
-          SET is_verified = ${input.isVerified},
-              specialty = ${input.specialty},
-              updated_at = NOW()
-          WHERE teacher_id = ${id}
-          RETURNING teacher_id,
-                    user_id,
-                    university_id,
-                    is_verified,
-                    specialty,
-                    created_at,
-                    updated_at
-        `,
-      );
-    } else if (input.isVerified !== undefined) {
-      result = await this.databaseService.db.execute<Teacher>(
-        sql`
-          UPDATE teachers
-          SET is_verified = ${input.isVerified},
-              updated_at = NOW()
-          WHERE teacher_id = ${id}
-          RETURNING teacher_id,
-                    user_id,
-                    university_id,
-                    is_verified,
-                    specialty,
-                    created_at,
-                    updated_at
-        `,
-      );
-    } else {
-      result = await this.databaseService.db.execute<Teacher>(
-        sql`
-          UPDATE teachers
-          SET specialty = ${input.specialty},
-              updated_at = NOW()
-          WHERE teacher_id = ${id}
-          RETURNING teacher_id,
-                    user_id,
-                    university_id,
-                    is_verified,
-                    specialty,
-                    created_at,
-                    updated_at
-        `,
-      );
-    }
+    const [row] = await this.databaseService.db.update(teacher).set(updates).where(eq(teacher.teacherId, id)).returning();
 
-    const row = result.rows[0] as Teacher | undefined;
     return row;
   }
 }

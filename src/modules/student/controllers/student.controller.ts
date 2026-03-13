@@ -2,9 +2,10 @@ import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@ne
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '#/common/decorators/roles.decorator';
 import { RolesGuard } from '#/common/guards/roles.guard';
-import { StudentService } from '../services/student.service';
 import { CreateStudentDto } from '../dtos/create-student.dto';
+import { LoginStudentDto } from '../dtos/login-student.dto';
 import { UpdateStudentDto } from '../dtos/update-student.dto';
+import { StudentService } from '../services/student.service';
 
 @Controller('students')
 export class StudentController {
@@ -35,5 +36,15 @@ export class StudentController {
   @Roles({ table: 'universityadmin', roles: ['admin'] })
   update(@Param('id') id: string, @Body() dto: UpdateStudentDto) {
     return this.studentService.update(id, dto);
+  }
+
+  @Post('login')
+  login(@Body() dto: LoginStudentDto) {
+    return this.studentService.login(dto);
+  }
+
+  @Get('profile')
+  profile(@Query('studentId') studentId: string) {
+    return this.studentService.profile(studentId);
   }
 }

@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { desc, eq } from 'drizzle-orm';
+import { REPOSITORY_TYPE } from '#/shared/types/repository/_';
 import { DatabaseService } from '../../database/database.service';
 import { student } from '../../database/schema';
-import { REPOSITORY_TYPE } from '#/shared/types/repository/_';
 
 @Injectable()
 export class StudentRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async create(input: REPOSITORY_TYPE.CreateStudentInput) {
-    const [row] = await this.databaseService.db
+  async create(input: REPOSITORY_TYPE.CreateStudentInput, db = this.databaseService.db) {
+    const [row] = await db
       .insert(student)
       .values({
         userId: input.userId,
@@ -18,6 +18,7 @@ export class StudentRepository {
         firstName: input.firstName,
         lastName: input.lastName,
         email: input.email ?? null,
+        password: input.password,
       })
       .returning();
 
@@ -25,13 +26,9 @@ export class StudentRepository {
   }
 
   async findById(studentId: string) {
-    const [row] = await this.databaseService.db
-      .select()
-      .from(student)
-      .where(eq(student.studentId, studentId))
-      .limit(1);
+    const [row] = await this.databaseService.db.select().from(student).where(eq(student.studentId, studentId)).limit(1);
 
-    return row ;
+    return row;
   }
 
   async list(params?: { limit?: number; offset?: number }) {
@@ -48,6 +45,12 @@ export class StudentRepository {
     return rows;
   }
 
+  async findByUserId(userId: string) {
+    const [row] = await this.databaseService.db.select().from(student).where(eq(student.userId, userId)).limit(1);
+
+    return row;
+  }
+
   async update(studentId: string, input: REPOSITORY_TYPE.UpdateStudentInput) {
     const [row] = await this.databaseService.db
       .update(student)
@@ -58,6 +61,6 @@ export class StudentRepository {
       .where(eq(student.studentId, studentId))
       .returning();
 
-    return row ;
+    return row;
   }
 }

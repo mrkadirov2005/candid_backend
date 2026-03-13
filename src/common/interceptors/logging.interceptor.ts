@@ -1,15 +1,9 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  Logger,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import type { Request, Response } from 'express';
 import { createWriteStream, existsSync, mkdirSync, type WriteStream } from 'fs';
 import { join } from 'path';
 import { Observable, tap } from 'rxjs';
-import type { Request, Response } from 'express';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -43,7 +37,7 @@ export class LoggingInterceptor implements NestInterceptor {
       path: request.url,
     };
 
-    this.requestLogStream.write(JSON.stringify(requestLog) + '\n');
+    this.requestLogStream.write(`${JSON.stringify(requestLog)}\n`);
     this.logger.log(JSON.stringify(requestLog));
 
     return next.handle().pipe(
@@ -61,7 +55,7 @@ export class LoggingInterceptor implements NestInterceptor {
             end_time: endTime,
             status: 'success',
           };
-          this.responseLogStream.write(JSON.stringify(responseLog) + '\n');
+          this.responseLogStream.write(`${JSON.stringify(responseLog)}\n`);
           this.logger.log(JSON.stringify(responseLog));
         },
         error: (error: { status?: number; statusCode?: number; message?: string }) => {
@@ -78,7 +72,7 @@ export class LoggingInterceptor implements NestInterceptor {
             status: 'fail',
             error: error.message,
           };
-          this.responseLogStream.write(JSON.stringify(responseLog) + '\n');
+          this.responseLogStream.write(`${JSON.stringify(responseLog)}\n`);
           this.logger.error(JSON.stringify(responseLog));
         },
       }),

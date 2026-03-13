@@ -11,16 +11,17 @@ import { universityAdmin } from '../database/schema';
 export class UniversityAdminRepository {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async create(input: CreateUniversityAdminInput) {
-    const [row] = await this.databaseService.db
+  async create(input: CreateUniversityAdminInput, db = this.databaseService.db) {
+    const [row] = await db
       .insert(universityAdmin)
       .values({
         userId: input.userId,
         universityId: input.universityId,
+        password: input.password,
       })
       .returning();
 
-    return row;
+    return row ?? null;
   }
 
   async findById(adminId: string) {
@@ -30,7 +31,13 @@ export class UniversityAdminRepository {
       .where(eq(universityAdmin.adminId, adminId))
       .limit(1);
 
-    return row;
+    return row ?? null;
+  }
+
+  async findByUserId(userId: string) {
+    const [row] = await this.databaseService.db.select().from(universityAdmin).where(eq(universityAdmin.userId, userId)).limit(1);
+
+    return row ?? null;
   }
 
   async list(params?: { limit?: number; offset?: number }) {
@@ -52,6 +59,6 @@ export class UniversityAdminRepository {
       .where(eq(universityAdmin.adminId, adminId))
       .returning();
 
-    return row;
+    return row ?? null;
   }
 }

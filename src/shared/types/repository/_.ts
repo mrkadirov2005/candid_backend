@@ -1,1 +1,1 @@
-export * as REPOSITORY_TYPE from "./index";
+export * as REPOSITORY_TYPE from './index';

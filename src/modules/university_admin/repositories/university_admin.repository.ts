@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
+import { REPOSITORY_TYPE } from '#/shared/types/repository/_';
 import { DatabaseService } from '../../database/database.service';
 import { universityAdmin } from '../../database/schema';
-import {REPOSITORY_TYPE} from '#/shared/types/repository/_';
-
 
 @Injectable()
 export class UniversityAdminRepository {
@@ -18,7 +17,7 @@ export class UniversityAdminRepository {
       })
       .returning();
 
-    return row??null;
+    return row ?? null;
   }
 
   async findById(adminId: string) {
@@ -28,7 +27,7 @@ export class UniversityAdminRepository {
       .where(eq(universityAdmin.adminId, adminId))
       .limit(1);
 
-    return row;
+    return row ?? null;
   }
 
   // pagination-ready signature`
@@ -51,6 +50,6 @@ export class UniversityAdminRepository {
       .where(eq(universityAdmin.adminId, adminId))
       .returning();
 
-    return row;
+    return row ?? null;
   }
 }

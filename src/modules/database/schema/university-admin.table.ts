@@ -1,4 +1,4 @@
-import { pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 export const universityAdmin = pgTable(
   'universityadmin',
@@ -6,6 +6,7 @@ export const universityAdmin = pgTable(
     adminId: uuid('admin_id').primaryKey().defaultRandom(),
     userId: uuid('user_id').notNull(),
     universityId: uuid('university_id').notNull(),
+    password: text('password').notNull(),
     createdAt: timestamp('created_at', { withTimezone: false }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: false }).notNull().defaultNow(),
   },

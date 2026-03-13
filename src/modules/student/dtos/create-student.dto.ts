@@ -2,7 +2,8 @@ import { IsEmail, IsOptional, IsString, IsUUID, MaxLength } from 'class-validato
 
 export class CreateStudentDto {
   @IsUUID('4')
-    userId!: string;
+  @IsOptional()
+  userId?: string;
 
   @IsUUID('4')
   universityId!: string;
@@ -20,6 +21,10 @@ export class CreateStudentDto {
   lastName!: string;
 
   @IsEmail()
-  @IsOptional()
-  email?: string;
+  @MaxLength(200)
+  email!: string;
+
+  @IsString()
+  @MaxLength(200)
+  password!: string;
 }
