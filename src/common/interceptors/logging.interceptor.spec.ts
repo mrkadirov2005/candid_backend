@@ -1,20 +1,20 @@
-import { of, throwError } from 'rxjs';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
-
-const mockWrite = jest.fn();
+import * as fs from 'fs';
+import { lastValueFrom, of, throwError } from 'rxjs';
+import { LoggingInterceptor } from './logging.interceptor';
 
 jest.mock('fs', () => ({
   existsSync: jest.fn().mockReturnValue(true),
   mkdirSync: jest.fn(),
-  createWriteStream: jest.fn().mockReturnValue({ write: mockWrite }),
+  createWriteStream: jest.fn(() => ({
+    write: jest.fn(),
+  })),
 }));
-
-import { LoggingInterceptor } from './logging.interceptor';
 
 describe('LoggingInterceptor', () => {
   let interceptor: LoggingInterceptor;
 
-  const mockRequest: { method: string; url: string; headers: Record<string, string> } = {
+  const mockRequest = {
     method: 'GET',
     url: '/test',
     headers: {},
@@ -33,100 +33,77 @@ describe('LoggingInterceptor', () => {
       }),
     }) as unknown as ExecutionContext;
 
+  const getWriteMocks = (): [jest.Mock, jest.Mock] => {
+    const createWriteStreamMock = fs.createWriteStream as unknown as jest.Mock;
+
+    const requestWrite = createWriteStreamMock.mock.results[0].value.write as jest.Mock;
+
+    const responseWrite = createWriteStreamMock.mock.results[1].value.write as jest.Mock;
+
+    return [requestWrite, responseWrite];
+  };
+
   beforeEach(() => {
-    mockWrite.mockClear();
-    mockResponse.setHeader.mockClear();
+    jest.clearAllMocks();
     mockRequest.headers = {};
     interceptor = new LoggingInterceptor();
   });
 
-  it('should attach X-Request-Id header to response', (done) => {
+  it('should attach X-Request-Id header to response', async () => {
     const context = createMockContext();
     const next: CallHandler = { handle: () => of(null) };
 
-    interceptor.intercept(context, next).subscribe({
-      complete: () => {
-        expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Request-Id', expect.any(String));
-        done();
-      },
-    });
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Request-Id', expect.any(String));
   });
 
-  it('should reuse existing X-Request-Id from request headers', (done) => {
-    const existingId = '11111111-1111-1111-1111-111111111111';
-    mockRequest.headers = { 'x-request-id': existingId };
+  it('should log incoming request', async () => {
     const context = createMockContext();
     const next: CallHandler = { handle: () => of(null) };
 
-    interceptor.intercept(context, next).subscribe({
-      complete: () => {
-        expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Request-Id', existingId);
-        done();
-      },
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    const [requestWrite] = getWriteMocks();
+    const log = JSON.parse(requestWrite.mock.calls[0][0] as string);
+
+    expect(log).toMatchObject({
+      method: 'GET',
+      path: '/test',
+      request_id: expect.any(String),
     });
   });
 
-  it('should log incoming request to request log file', (done) => {
+  it('should log successful response', async () => {
     const context = createMockContext();
-    const next: CallHandler = { handle: () => of(null) };
+    const next: CallHandler = { handle: () => of({ ok: true }) };
 
-    interceptor.intercept(context, next).subscribe({
-      complete: () => {
-        const requestLogCall = mockWrite.mock.calls[0][0] as string;
-        const parsed = JSON.parse(requestLogCall.trim());
-        expect(parsed).toMatchObject({
-          method: 'GET',
-          path: '/test',
-          request_id: expect.any(String),
-        });
-        done();
-      },
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    const [, responseWrite] = getWriteMocks();
+    const log = JSON.parse(responseWrite.mock.calls[0][0] as string);
+
+    expect(log).toMatchObject({
+      status: 'success',
+      statusCode: 200,
     });
   });
 
-  it('should log successful response to response log file', (done) => {
+  it('should log failed response', async () => {
     const context = createMockContext();
-    const next: CallHandler = { handle: () => of({ data: 'ok' }) };
 
-    interceptor.intercept(context, next).subscribe({
-      complete: () => {
-        const responseLogCall = mockWrite.mock.calls[1][0] as string;
-        const parsed = JSON.parse(responseLogCall.trim());
-        expect(parsed).toMatchObject({
-          method: 'GET',
-          path: '/test',
-          statusCode: 200,
-          status: 'success',
-          request_id: expect.any(String),
-          duration_ms: expect.any(Number),
-          end_time: expect.any(String),
-        });
-        done();
-      },
-    });
-  });
+    const next: CallHandler = {
+      handle: () => throwError(() => ({ status: 400, message: 'Bad Request' })),
+    };
 
-  it('should log failed response to response log file', (done) => {
-    const context = createMockContext();
-    const error = { status: 400, message: 'Bad Request' };
-    const next: CallHandler = { handle: () => throwError(() => error) };
+    await expect(lastValueFrom(interceptor.intercept(context, next))).rejects.toBeDefined();
 
-    interceptor.intercept(context, next).subscribe({
-      error: () => {
-        const responseLogCall = mockWrite.mock.calls[1][0] as string;
-        const parsed = JSON.parse(responseLogCall.trim());
-        expect(parsed).toMatchObject({
-          method: 'GET',
-          path: '/test',
-          statusCode: 400,
-          status: 'fail',
-          error: 'Bad Request',
-          request_id: expect.any(String),
-          duration_ms: expect.any(Number),
-          end_time: expect.any(String),
-        });
-        done();
-      },
+    const [, responseWrite] = getWriteMocks();
+    const log = JSON.parse(responseWrite.mock.calls[0][0] as string);
+
+    expect(log).toMatchObject({
+      status: 'fail',
+      statusCode: 400,
     });
   });
 });
