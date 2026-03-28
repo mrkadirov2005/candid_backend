@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '#/app.module';
 import { LoggingInterceptor } from '#/common/interceptors/logging.interceptor';
@@ -9,6 +10,13 @@ async function bootstrap() {
 
   app.enableCors();
   app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   const configService = app.get(ConfigService<EnvConfig, true>);
 

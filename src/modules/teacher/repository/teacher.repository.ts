@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { desc, eq } from 'drizzle-orm';
-import { DatabaseService } from '../database/database.service';
-import { teacher } from '../database/schema';
+import { DatabaseService } from '../../database/database.service';
+import { teacher } from '../../database/schema';
 
 export interface Teacher extends Record<string, unknown> {
   teacherId: string;
@@ -19,6 +19,7 @@ export interface CreateTeacherInput {
   universityId: string;
   specialty?: string | null;
   password: string;
+  email: string;
 }
 
 export interface ListTeachersParams {
@@ -33,7 +34,7 @@ export interface UpdateTeacherInput {
 
 @Injectable()
 export class TeacherRepository {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(private readonly databaseService: DatabaseService) { }
 
   async create(input: CreateTeacherInput, db = this.databaseService.db): Promise<Teacher | undefined> {
     const { userId, universityId, specialty = null } = input;
@@ -41,9 +42,10 @@ export class TeacherRepository {
     const [row] = await db
       .insert(teacher)
       .values({
-        userId,
-        universityId,
-        specialty,
+        userId: userId,
+        universityId: universityId,
+        specialty: specialty,
+        email: input.email,
         password: input.password,
       })
       .returning();
@@ -95,6 +97,14 @@ export class TeacherRepository {
     updates.updatedAt = new Date();
 
     const [row] = await this.databaseService.db.update(teacher).set(updates).where(eq(teacher.teacherId, id)).returning();
+
+    return row;
+  }
+
+
+
+  async findByEmail(email: string): Promise<Teacher | undefined> {
+    const [row] = await this.databaseService.db.select().from(teacher).where(eq(teacher.email, email)).limit(1);
 
     return row;
   }

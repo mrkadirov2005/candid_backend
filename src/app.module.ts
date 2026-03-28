@@ -4,9 +4,12 @@ import { validateEnv } from '#/shared/configs';
 import { AuthModule } from './modules/auth';
 import { DatabaseModule } from './modules/database/database.module';
 import { EmployerModule } from './modules/employer';
+import { EmailModule } from './modules/email';
+import { MessageModule } from './modules/message';
 import { HealthModule } from './modules/health/health.module';
 import { JointTablesModule } from './modules/joint_tables';
 import { ProjectModule } from './modules/project';
+import { RecommendationModule } from './modules/recommendation';
 import { SkillModule } from './modules/skill';
 import { StudentModule } from './modules/student';
 import { TeacherModule } from './modules/teacher';
@@ -35,6 +38,9 @@ import { VacancyModule } from './modules/vacancy';
     JointTablesModule,
     TeacherModule,
     AuthModule,
+    RecommendationModule,
+    EmailModule,
+    MessageModule,
   ],
 })
 export class AppModule {}

@@ -3,13 +3,14 @@ import type { Request } from 'express';
 import { from, type Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
+import type { JwtPayload } from '../services/auth.service';
 
 @Injectable()
 export class AuthUserInterceptor implements NestInterceptor {
   constructor(private readonly authService: AuthService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.switchToHttp().getRequest<Request & { user: { userId: string } | undefined }>();
+    const request = context.switchToHttp().getRequest<Request & { user: JwtPayload | undefined }>();
     const payload = request.user;
 
     if (!payload) {

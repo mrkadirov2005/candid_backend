@@ -1,8 +1,9 @@
-import { IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsEmail, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class LoginStudentDto {
-  @IsUUID('4')
-  userId!: string;
+  @IsEmail()
+  @MaxLength(200)
+  email!: string;
 
   @IsString()
   @MaxLength(200)

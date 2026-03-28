@@ -7,13 +7,11 @@ import { LoginStudentDto } from '../dtos/login-student.dto';
 import { UpdateStudentDto } from '../dtos/update-student.dto';
 import { StudentService } from '../services/student.service';
 
-@Controller('students')
+@Controller('student')
 export class StudentController {
-  constructor(private readonly studentService: StudentService) {}
+  constructor(private readonly studentService: StudentService) { }
 
   @Post()
-  @UseGuards(AuthGuard('auth_token'), RolesGuard)
-  @Roles({ table: 'universityadmin', roles: ['admin'] })
   create(@Body() dto: CreateStudentDto) {
     return this.studentService.create(dto);
   }

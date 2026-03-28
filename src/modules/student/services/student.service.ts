@@ -64,7 +64,7 @@ export class StudentService {
   }
 
   async login(dto: LoginStudentDto) {
-    const student = await this.studentRepository.findByUserId(dto.userId);
+    const student = await this.studentRepository.findByEmail(dto.email);
     if (!student) {
       return null;
     }

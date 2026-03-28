@@ -13,24 +13,22 @@ export class EmployerService {
     private readonly employerRepository: EmployerRepository,
     private readonly userRepository: UserRepository,
     private readonly databaseService: DatabaseService,
-  ) {}
+  ) { }
 
   async create(dto: CreateEmployerDto) {
     const password = await Hasher.hash(dto.password);
     return this.databaseService.db.transaction(async (tx) => {
-      const user = await this.userRepository.create({ role: 'employer', email: dto.email }, tx);
-      if (!user) {
-        return null;
-      }
-
-      return this.employerRepository.create(
+      // register the user in employer table
+      const isCreated = await this.employerRepository.create(
         {
-          ...dto,
-          password,
-          id: user.userId,
+          name: dto.name,
+          email: dto.email,
+          company: dto.company,
+          password: password,
         },
-        tx,
+        tx
       );
+      return isCreated;
     });
   }
 

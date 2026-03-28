@@ -4,6 +4,10 @@ export class CreateTeacherDto {
   @IsUUID('4')
   universityId!: string;
 
+  @IsString()
+  @MaxLength(100)
+  name!: string;
+
   @IsUUID('4')
   @IsOptional()
   userId?: string;

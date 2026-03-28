@@ -18,6 +18,11 @@ export class EmployerController {
     return this.employerService.findById(id);
   }
 
+  @Get('login')
+  findByEmail(@Query('email') email: string, @Query('password') password: string) {
+    return this.employerService.login({email,password} as LoginEmployerDto);
+  }
+  
   @Get()
   list(@Query('limit') limit?: string, @Query('offset') offset?: string) {
     return this.employerService.list({

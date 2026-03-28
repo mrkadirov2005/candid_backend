@@ -5,7 +5,7 @@ import { UserRepository } from '../../user/repositories/user.repository';
 import { CreateTeacherDto } from '../dtos/create-teacher.dto';
 import { LoginTeacherDto } from '../dtos/login-teacher.dto';
 import { UpdateTeacherDto } from '../dtos/update-teacher.dto';
-import { TeacherRepository } from '../teacher.repository';
+import { TeacherRepository } from '../repository/teacher.repository';
 
 type CreateTeacherWithUserInput = {
   userId?: string;
@@ -21,42 +21,20 @@ export class TeacherService {
     private readonly teacherRepository: TeacherRepository,
     private readonly userRepository: UserRepository,
     private readonly databaseService: DatabaseService,
-  ) {}
+  ) { }
 
   async create(input: CreateTeacherWithUserInput) {
     const hashedPassword = await Hasher.hash(input.password);
     return this.databaseService.db.transaction(async (tx) => {
-      let userId = input.userId;
-
-      if (userId) {
-        const existing = await this.userRepository.findById(userId, tx);
-        if (existing) {
-          if (existing.role !== 'teacher') {
-            return null;
-          }
-        } else {
-          const created = await this.userRepository.create({ userId, role: 'teacher', email: input.email }, tx);
-          if (!created) {
-            return null;
-          }
-        }
-      } else {
-        const created = await this.userRepository.create({ role: 'teacher', email: input.email }, tx);
-        if (!created) {
-          return null;
-        }
-        userId = created.userId;
-      }
-
-      return this.teacherRepository.create(
-        {
-          userId,
-          universityId: input.universityId,
-          specialty: input.specialty,
-          password: hashedPassword,
-        },
-        tx,
-      );
+      // create a teacher record
+      const teacher = await this.teacherRepository.create({
+        userId: input.userId as unknown as string,
+        universityId: input.universityId,
+        specialty: input.specialty,
+        password: hashedPassword,
+        email: input.email,
+      }, tx);
+      return teacher;
     });
   }
 
@@ -78,7 +56,7 @@ export class TeacherService {
   }
 
   async login(dto: LoginTeacherDto) {
-    const teacher = await this.teacherRepository.findByUserId(dto.userId);
+    const teacher = await this.teacherRepository.findByEmail(dto.email);
     if (!teacher) {
       return null;
     }

@@ -4,7 +4,7 @@ import { LoginUniversityAdminDto } from '../dtos/login-university-admin.dto';
 import { UpdateUniversityAdminDto } from '../dtos/update-university-admin.dto';
 import { UniversityAdminService } from '../services/university_admin.service';
 
-@Controller('uni_admin')
+@Controller('university_admin')
 export class UniversityAdminController {
   constructor(private readonly universityAdminService: UniversityAdminService) {}
 

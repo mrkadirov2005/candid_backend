@@ -4,6 +4,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { type EnvConfig } from '#/shared/configs';
+import { EmailModule } from '../email';
 import { EmployerModule } from '../employer';
 import { StudentModule } from '../student';
 import { TeacherModule } from '../teacher';
@@ -32,6 +33,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     UniversityAdminModule,
     TeacherModule,
     EmployerModule,
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [
@@ -44,4 +46,4 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   ],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

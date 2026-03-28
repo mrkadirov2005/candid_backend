@@ -1,8 +1,13 @@
 import { IsEmail, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class CreateUniversityAdminDto {
+  @IsString()
+  @MaxLength(160)
+  name!: string;
+
+  @IsOptional()
   @IsUUID('4')
-  universityId!: string;
+  universityId?: string;
 
   @IsUUID('4')
   @IsOptional()

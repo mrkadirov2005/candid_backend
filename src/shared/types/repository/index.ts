@@ -7,3 +7,5 @@ export * from './skill';
 export * from './project';
 export * from './employer';
 export * from './joint_skills';
+export * from './recommendation';
+export * from './message';

@@ -9,3 +9,5 @@ export * from './joint-skills.table';
 export * from './project.table';
 export * from './employer.table';
 export * from './teacher.table';
+export * from './recommendation.table';
+export * from './message.table';

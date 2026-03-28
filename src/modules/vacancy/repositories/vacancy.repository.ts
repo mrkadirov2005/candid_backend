@@ -4,7 +4,7 @@ import { VacancyModel } from '../models/vacancy.model';
 
 @Injectable()
 export class VacancyRepository {
-  constructor(private readonly vacancyModel: typeof VacancyModel = VacancyModel) {}
+  private readonly vacancyModel: typeof VacancyModel = VacancyModel;
 
   async create(input: REPOSITORY_TYPE.CreateVacancyInput) {
     const row = await this.vacancyModel.create({

@@ -15,6 +15,12 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+  mailhog:
+    image: mailhog/mailhog
+    container_name: candid_pms_mailhog
+    ports:
+      - '1025:1025' # SMTP server port (your Nest server sends emails here)
+      - '8025:8025' # Web interface port (open in browser to see the emails)
 
 volumes:
   pgdata:

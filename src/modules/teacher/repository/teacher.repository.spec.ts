@@ -1,4 +1,4 @@
-import type { DatabaseService } from '../database/database.service';
+import type { DatabaseService } from '../../database/database.service';
 import {
   type CreateTeacherInput,
   type ListTeachersParams,
@@ -74,6 +74,7 @@ describe('TeacherRepository', () => {
       universityId: 'uni-1',
       specialty: 'Math',
       password: 'hashed-pass',
+      email: 'teacher@example.com'
     };
 
     const row: Teacher = {
@@ -102,6 +103,7 @@ describe('TeacherRepository', () => {
       userId: 'user-1',
       universityId: 'uni-1',
       password: 'hashed-pass',
+      email: 'teacher@example.com'
     };
 
     dbMock.insertReturning.mockResolvedValueOnce([]);

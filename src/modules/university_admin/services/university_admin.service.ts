@@ -5,7 +5,7 @@ import { UserRepository } from '../../user/repositories/user.repository';
 import { CreateUniversityAdminDto } from '../dtos/create-university-admin.dto';
 import { LoginUniversityAdminDto } from '../dtos/login-university-admin.dto';
 import { UpdateUniversityAdminDto } from '../dtos/update-university-admin.dto';
-import { UniversityAdminRepository } from '../university_admin.repository';
+import { UniversityAdminRepository } from '../repositories/university_admin.repository';
 
 @Injectable()
 export class UniversityAdminService {
@@ -13,41 +13,23 @@ export class UniversityAdminService {
     private readonly universityAdminRepository: UniversityAdminRepository,
     private readonly userRepository: UserRepository,
     private readonly databaseService: DatabaseService,
-  ) {}
+  ) { }
 
   async create(dto: CreateUniversityAdminDto) {
     const hashedPassword = await Hasher.hash(dto.password);
     return this.databaseService.db.transaction(async (tx) => {
-      let userId = dto.userId;
-
-      if (userId) {
-        const existing = await this.userRepository.findById(userId, tx);
-        if (existing) {
-          if (existing.role !== 'university_admin') {
-            return null;
-          }
-        } else {
-          const created = await this.userRepository.create({ userId, role: 'university_admin', email: dto.email }, tx);
-          if (!created) {
-            return null;
-          }
-        }
-      } else {
-        const created = await this.userRepository.create({ role: 'university_admin', email: dto.email }, tx);
-        if (!created) {
-          return null;
-        }
-        userId = created.userId;
-      }
-
-      return this.universityAdminRepository.create(
+      // register the user in university_admin table
+      const isCreated = await this.universityAdminRepository.create(
         {
-          userId,
-          universityId: dto.universityId,
+          name: dto.name,
+          email: dto.email,
           password: hashedPassword,
+          universityId: dto.universityId,
+          userId: dto.userId,
         },
-        tx,
+        tx
       );
+      return isCreated;
     });
   }
 
@@ -65,7 +47,7 @@ export class UniversityAdminService {
   }
 
   async login(dto: LoginUniversityAdminDto) {
-    const admin = await this.universityAdminRepository.findByUserId(dto.userId);
+    const admin = await this.universityAdminRepository.findByEmail(dto.email);
     if (!admin) {
       return null;
     }

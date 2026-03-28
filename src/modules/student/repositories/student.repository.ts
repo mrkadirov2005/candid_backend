@@ -30,6 +30,11 @@ export class StudentRepository {
 
     return row;
   }
+  async findByEmail(email: string) {
+    const [row] = await this.databaseService.db.select().from(student).where(eq(student.email, email)).limit(1);
+
+    return row;
+  }
 
   async list(params?: { limit?: number; offset?: number }) {
     const limit = params?.limit ?? 20;

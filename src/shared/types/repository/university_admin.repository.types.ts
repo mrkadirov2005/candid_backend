@@ -1,7 +1,9 @@
 export type CreateUniversityAdminInput = {
-  userId: string;
-  universityId: string;
+  userId?: string;
+  universityId?: string;
   password: string;
+  email: string;
+  name: string;
 };
 
 export type UpdateUniversityAdminInput = {
